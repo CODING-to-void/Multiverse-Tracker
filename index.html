@@ -383,11 +383,12 @@
     }
 
     /* Main content area offset for sidebar */
-    .app-content {
-      margin-left: 210px;
-      flex: 1;
-      min-width: 0;
-    }
+  .app-content {
+  margin-left: 210px;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
 
     .user-menu {
       position: fixed;
@@ -433,13 +434,12 @@
     }
 
     /* ── MAIN ── */
-    main {
-      position: relative;
-      z-index: 1;
-      padding: 34px 40px;
-      max-width: 1200px;
-    }
-
+   
+   main {
+  width: 100%;
+  max-width: 1200px;
+  padding: 34px 40px;
+}
     .page {
       display: none;
     }
