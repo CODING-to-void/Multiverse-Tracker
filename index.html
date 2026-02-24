@@ -226,6 +226,49 @@
       display: none;
     }
 
+.img-task-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: none;
+  gap: 4px;
+  background: rgba(9,9,11,0.85);
+  border-radius: 6px;
+  padding: 3px;
+}
+
+.img-task:hover .img-task-actions {
+  display: flex;
+}
+
+.img-task-actions button {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--text-mid);
+  cursor: pointer;
+  font-size: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.img-task-actions button:hover {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.img-task-actions button:first-child:hover {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border-color: var(--gold-line);
+}
+
+   
     /* App shell — hidden until logged in */
     #appShell {
       display: none;
@@ -3029,21 +3072,31 @@
       document.getElementById('imgTaskName').value = '';
       document.getElementById('imgTaskSubject').value = '';
     }
-    function renderImgTasks() {
-      const g = document.getElementById('imgTaskGrid');
-      const addBtn = `<div class="img-upload-btn" onclick="openImgTaskModal()"><div style="font-size:20px;color:var(--text-dim)">+</div><div>Add Task</div></div>`;
-      if (!state.imgTasks.length) { g.innerHTML = addBtn; return; }
-      g.innerHTML = state.imgTasks.map(t => `
-    <div class="img-task${t.done ? ' done' : ''}" onclick="toggleImgTask(${t.id})">
-      ${t.img ? `<img src="${t.img}" alt="${esc(t.name)}">` : `<div class="img-task-placeholder">${t.icon || '?'}</div>`}
+   function renderImgTasks() {
+  const g = document.getElementById('imgTaskGrid');
+  const addBtn = `<div class="img-upload-btn" onclick="openImgTaskModal()">
+    <div style="font-size:20px;color:var(--text-dim)">+</div>
+    <div>Add Task</div>
+  </div>`;
+
+  if (!state.imgTasks.length) { g.innerHTML = addBtn; return; }
+
+  g.innerHTML = state.imgTasks.map(t => `
+    <div class="img-task${t.done ? ' done' : ''}" style="position:relative;" onclick="openTaskViewer(${t.id})">
+      ${t.img
+        ? `<img src="${t.img}" alt="${esc(t.name)}">`
+        : `<div class="img-task-placeholder">${t.icon || '?'}</div>`
+      }
       <div class="img-task-name">${esc(t.name)}</div>
       ${t.subject ? `<div class="img-task-sub">${esc(t.subject)}</div>` : ''}
-    </div>`).join('') + addBtn;
-    }
-    function toggleImgTask(id) {
-      const t = state.imgTasks.find(t => t.id === id);
-      if (t) { t.done = !t.done; saveState(); renderImgTasks(); }
-    }
+
+      <div class="img-task-actions">
+        <button onclick="event.stopPropagation();editImgTask(${t.id})" title="Edit">&#9998;</button>
+        <button onclick="event.stopPropagation();deleteImgTask(${t.id})" title="Delete">&#215;</button>
+      </div>
+    </div>`
+  ).join('') + addBtn;
+}
 
     // ─────────────────────────────────────────────
     // TIMER
@@ -3752,6 +3805,50 @@
       showPage('notes', document.querySelector('nav button:nth-child(6)'));
       openNote(note.id);
     }
+    // ─────────────────────────────────────────────
+   //      TASK VIEWER MODAL 
+   // ─────────────────────────────────────────────
+
+<div class="modal-overlay" id="taskViewerModal">
+  <div class="modal" style="width:560px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+      <div>
+        <div class="modal-title" style="margin-bottom:4px;" id="viewerTaskName"></div>
+        <div style="font-size:12px;color:var(--text-dim);letter-spacing:1px;" id="viewerTaskSubject"></div>
+      </div>
+      <button class="node-panel-close" style="position:static;width:28px;height:28px;" onclick="closeTaskViewer()">&#215;</button>
+    </div>
+
+    <div id="viewerMedia" style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;min-height:220px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;overflow:hidden;"></div>
+
+    <div class="modal-footer" style="justify-content:space-between;">
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-danger" onclick="deleteImgTaskFromViewer()">Delete</button>
+        <button class="btn btn-secondary" onclick="editImgTaskFromViewer()">&#9998; Edit</button>
+      </div>
+      <button class="btn btn-success" id="viewerDoneBtn" onclick="toggleImgTaskFromViewer()">Mark Done</button>
+    </div>
+  </div>
+</div>
+
+   // _______________________________________
+  //      TASK EDIT MODAL
+   // ________________________________________
+
+   <div class="modal-overlay" id="taskEditModal">
+  <div class="modal">
+    <div class="modal-title">Edit Reference Task</div>
+    <input type="hidden" id="editTaskId">
+    <label>Task Name</label>
+    <input type="text" id="editTaskName" placeholder="Task name...">
+    <label>Subject</label>
+    <input type="text" id="editTaskSubject" placeholder="Subject...">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTaskEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditedTask()">Save Changes</button>
+    </div>
+  </div>
+</div>
    
      // ─────────────────────────────────────────────
      // DELETE NOTE
@@ -3781,7 +3878,100 @@
 
   showNotif("Note deleted.", "gold");
   }
+   
+   // ─────────────────────────────────────────────
+// REFERENCE TASK VIEWER & EDIT
+// ─────────────────────────────────────────────
 
+   let viewingTaskId = null;
+
+function openTaskViewer(id) {
+  const t = state.imgTasks.find(t => t.id === id);
+  if (!t) return;
+  viewingTaskId = id;
+
+  document.getElementById('viewerTaskName').textContent = t.name;
+  document.getElementById('viewerTaskSubject').textContent = t.subject || 'No subject';
+
+  const media = document.getElementById('viewerMedia');
+  if (t.img) {
+    media.innerHTML = `<img src="${t.img}" style="max-width:100%;max-height:400px;object-fit:contain;border-radius:8px;">`;
+  } else {
+    media.innerHTML = `<div style="font-size:56px;color:var(--text-dim);">${t.icon || '?'}</div>`;
+  }
+
+  const doneBtn = document.getElementById('viewerDoneBtn');
+  doneBtn.textContent = t.done ? 'Mark Undone' : 'Mark Done';
+  doneBtn.className = t.done ? 'btn btn-secondary' : 'btn btn-success';
+
+  document.getElementById('taskViewerModal').classList.add('open');
+}
+
+function closeTaskViewer() {
+  document.getElementById('taskViewerModal').classList.remove('open');
+  viewingTaskId = null;
+}
+
+function toggleImgTaskFromViewer() {
+  const t = state.imgTasks.find(t => t.id === viewingTaskId);
+  if (!t) return;
+  t.done = !t.done;
+  saveState();
+  renderImgTasks();
+  // Update button text in place
+  const doneBtn = document.getElementById('viewerDoneBtn');
+  doneBtn.textContent = t.done ? 'Mark Undone' : 'Mark Done';
+  doneBtn.className = t.done ? 'btn btn-secondary' : 'btn btn-success';
+  showNotif(t.done ? 'Marked as done' : 'Marked as undone', 'green');
+}
+
+function deleteImgTaskFromViewer() {
+  if (!confirm('Delete this task?')) return;
+  deleteImgTask(viewingTaskId);
+  closeTaskViewer();
+}
+
+function editImgTaskFromViewer() {
+  closeTaskViewer();
+  editImgTask(viewingTaskId);
+}
+
+function editImgTask(id) {
+  const t = state.imgTasks.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('editTaskId').value = id;
+  document.getElementById('editTaskName').value = t.name;
+  document.getElementById('editTaskSubject').value = t.subject || '';
+  document.getElementById('taskEditModal').classList.add('open');
+}
+
+function closeTaskEditModal() {
+  document.getElementById('taskEditModal').classList.remove('open');
+}
+
+function saveEditedTask() {
+  const id = parseInt(document.getElementById('editTaskId').value);
+  const t = state.imgTasks.find(t => t.id === id);
+  if (!t) return;
+  const newName = document.getElementById('editTaskName').value.trim();
+  if (!newName) { showNotif('Task name cannot be empty', 'gold'); return; }
+  t.name = newName;
+  t.subject = document.getElementById('editTaskSubject').value.trim();
+  saveState();
+  renderImgTasks();
+  closeTaskEditModal();
+  showNotif('Task updated', 'green');
+}
+
+function deleteImgTask(id) {
+  if (!confirm('Delete this task permanently?')) return;
+  state.imgTasks = state.imgTasks.filter(t => t.id !== id);
+  saveState();
+  renderImgTasks();
+  showNotif('Task deleted', 'gold');
+}
+
+   
     // ─────────────────────────────────────────────
     // UTILS
     // ─────────────────────────────────────────────
