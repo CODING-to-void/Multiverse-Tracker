@@ -3759,14 +3759,9 @@
    function clearAllImgTasks() {
   if (!confirm("Clear all reference tasks? This cannot be undone.")) return;
 
-  // Clear array (if you use one)
-  imgTasks = [];
-
-  // Remove from localStorage
-  localStorage.removeItem("imgTasks");
-
-  // Clear UI grid
-  document.getElementById("imgTaskGrid").innerHTML = "";
+  state.imgTasks = [];   // Clear from your real app state
+  saveState();           // Save updated state
+  renderImgTasks();      // Re-render UI properly
 
   showNotif("All reference tasks cleared.", "red");
 }
