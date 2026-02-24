@@ -386,9 +386,7 @@
 .app-content {
   margin-left: 210px;
   flex: 1;
-  display: flex;
-  justify-content: flex-start;  /* change center to flex-start */
-  width: calc(100% - 210px);
+  min-height: 100vh;
 }
     .user-menu {
       position: fixed;
@@ -435,11 +433,11 @@
 
     /* ── MAIN ── */
    
-  main {
+main {
   width: 100%;
   max-width: 1200px;
   padding: 34px 40px;
-  margin: 0 auto;  /* ADD this */
+  margin: 0 auto;
 }
     .page {
       display: none;
