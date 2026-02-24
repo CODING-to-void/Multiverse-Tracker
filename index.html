@@ -3758,7 +3758,7 @@
    // ─────────────────────────────────────────────
    
    function deleteCurrentNote() {
-  if (!state.currentNoteId) {
+  if (!currentNoteId) {
     showNotif("No note selected.", "red");
     return;
   }
@@ -3766,18 +3766,18 @@
   if (!confirm("Delete this note permanently?")) return;
 
   // Remove from state
-  state.notes = state.notes.filter(n => n.id !== state.currentNoteId);
+  state.notes = state.notes.filter(n => n.id !== currentNoteId);
 
   saveState();
 
   // Clear editor
-  state.currentNoteId = null;
-  document.querySelector(".note-title-input").value = "";
+  currentNoteId = null;
+  document.getElementById("noteTitleInput").value = "";
   document.getElementById("noteEditor").innerHTML = "";
   document.getElementById("noteWordCount").textContent = "0 words";
   document.getElementById("noteLastSaved").textContent = "Not saved yet";
 
-  renderNotes();
+  renderNotesList();
 
   showNotif("Note deleted.", "gold");
   }
