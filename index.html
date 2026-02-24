@@ -387,10 +387,9 @@
   margin-left: 210px;
   flex: 1;
   display: flex;
-  justify-content: center;
-  width: calc(100% - 210px);  /* ADD THIS LINE */
+  justify-content: flex-start;  /* change center to flex-start */
+  width: calc(100% - 210px);
 }
-
     .user-menu {
       position: fixed;
       bottom: 70px;
@@ -436,10 +435,11 @@
 
     /* ── MAIN ── */
    
-   main {
+  main {
   width: 100%;
   max-width: 1200px;
   padding: 34px 40px;
+  margin: 0 auto;  /* ADD this */
 }
     .page {
       display: none;
