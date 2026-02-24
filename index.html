@@ -2550,6 +2550,9 @@
                 data-placeholder="Begin writing your notes here. Use [[Note Title]] to link between notes..."
                 oninput="autoSaveNote(); scanWikiLinks()"></div>
               <div class="note-footer">
+               <button class="btn btn-danger btn-sm" onclick="deleteCurrentNote()">
+                 Delete
+                 </button>
                 <span id="noteWordCount">0 words</span>
                 <span id="noteLastSaved">Not saved yet</span>
               </div>
@@ -3749,6 +3752,35 @@
       showPage('notes', document.querySelector('nav button:nth-child(6)'));
       openNote(note.id);
     }
+   
+     // ─────────────────────────────────────────────
+     // DELETE NOTE
+   // ─────────────────────────────────────────────
+   
+   function deleteCurrentNote() {
+  if (!state.currentNoteId) {
+    showNotif("No note selected.", "red");
+    return;
+  }
+
+  if (!confirm("Delete this note permanently?")) return;
+
+  // Remove from state
+  state.notes = state.notes.filter(n => n.id !== state.currentNoteId);
+
+  saveState();
+
+  // Clear editor
+  state.currentNoteId = null;
+  document.querySelector(".note-title-input").value = "";
+  document.getElementById("noteEditor").innerHTML = "";
+  document.getElementById("noteWordCount").textContent = "0 words";
+  document.getElementById("noteLastSaved").textContent = "Not saved yet";
+
+  renderNotes();
+
+  showNotif("Note deleted.", "gold");
+  }
 
     // ─────────────────────────────────────────────
     // UTILS
